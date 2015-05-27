@@ -73,6 +73,7 @@ class Tora {
 	var redirect : Dynamic;
 	var set_trusted : Dynamic;
 	var enable_jit : Bool -> Bool;
+	var gc_generate_random_backtrace : Void -> Void;
 	var running : Bool;
 	var jit : Bool;
 	var hosts : Map<String,String>;
@@ -107,6 +108,7 @@ class Tora {
 		redirect = neko.Lib.load("std","print_redirect",1);
 		set_trusted = neko.Lib.load("std","set_trusted",1);
 		enable_jit = neko.Lib.load("std","enable_jit",1);
+		gc_generate_random_backtrace = neko.Lib.loadLazy("std","gc_generate_random_backtrace",0);
 		jit = (enable_jit(null) == true);
 		neko.vm.Thread.create(startup.bind(nthreads,clientQueue));
 		neko.vm.Thread.create(socketsLoop);
@@ -617,10 +619,35 @@ class Tora {
 			running = false;
 		case "gc":
 			neko.vm.Gc.run(true);
+		case "gcDebug":
+			if( gc_generate_random_backtrace == null )
+				throw "gcDebug not available.";
+
+			// clean
+			flock.acquire();
+			for( f in files.keys() ){
+				var file = files.get(f);
+				if( file.cron != null )
+					rmdelay( file.cron );
+
+				files.remove(f);
+			}
+			flock.release();
+
+			// GC
+			neko.vm.Gc.run(true);
+
+			gc_generate_random_backtrace(); 
+
 		case "clean":
 			flock.acquire();
-			for( f in files.keys() )
+			for( f in files.keys() ){
+				var file = files.get(f);
+				if( file.cron != null )
+					rmdelay( file.cron );
+
 				files.remove(f);
+			}
 			flock.release();
 		case "hosts":
 			for( h in hosts.keys() )
