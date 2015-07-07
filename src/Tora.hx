@@ -879,8 +879,8 @@ class Tora {
 				switch( cmd.shift().toLowerCase() ) {
 				case "documentroot":
 					var path = cmd.join(" ");
-					// replace all \ by / (same as apache)
-					path = path.split("\\").join("/");
+					// replace all \ by / (same as apache)   also handles the quotes
+					path = path.split("\"").join("").split("\\").join("/");
 					if( path.length > 0 && path.charAt(path.length-1) != "/" )
 						path += "/";
 					root = path+"index.n";
