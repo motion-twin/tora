@@ -779,7 +779,7 @@ class Tora {
 			Sys.print("</table>");
 		case "clients":
 			Sys.print("<table>");
-			Sys.print("<tr><th>IP</th><th>Protocol</th><th>Host</th><th>URL</th><th>User-Agent</th></tr>");
+			Sys.print("<tr><th>IP</th><th>Host</th><th>URL</th><th>User-Agent</th></tr>");
 
 			ModToraApi.queues_lock.acquire();
 			var ql = Lambda.list(ModToraApi.queues);
@@ -808,7 +808,7 @@ class Tora {
 						}
 					}catch(e : Dynamic ){
 					}
-					Sys.print('<tr><td>${c.ip}</td><td>${c.protocol}</td><td>${c.hostName}</td><td>${c.uri}</td><td>$ua</td></tr>');
+					Sys.print('<tr><td>${c.ip}</td><td>${c.hostName}</td><td>${c.uri}</td><td>$ua</td></tr>');
 				}
 			}
 			Sys.print("</table>");
