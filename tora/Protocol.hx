@@ -150,6 +150,10 @@ class Protocol {
 		tmpOut = null;
 		#end
 	}
+	
+	public dynamic function onBytes(data:haxe.io.Bytes) {
+		onData(data.toString());
+	}
 
 	function onSocketData(_) {
 		while ( true ) {
@@ -175,6 +179,7 @@ class Protocol {
 			// ouch !! flash will read the whole data if 0 length !
 			if( dataLength > 0 )
 				sock.readBytes(bytes, 0, dataLength);
+			var bytes = haxe.io.Bytes.ofData(bytes);
 			#elseif sys
 			var i = sock.input;
 			var code = i.readByte() - 1;
@@ -193,7 +198,7 @@ class Protocol {
 			lastMessage = null;
 			switch( msg ) {
 			case CHeaderKey, CHeaderValue, CHeaderAddValue, CLog:
-			case CPrint: onData(bytes.toString());
+			case CPrint: onBytes(bytes);
 			case CError:
 				error(bytes.toString());
 				return;

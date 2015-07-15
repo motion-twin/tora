@@ -1,7 +1,6 @@
 -cp src
 -neko tora.n
 -main Tora
--lib redis
 --next
 -cp src
 -neko tora_admin.n

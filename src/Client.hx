@@ -21,9 +21,11 @@ import ModToraApi.Share;
 class Client {
 
 	static var CODES = Type.getEnumConstructs(Code);
+	static var socket_set_keepalive : Null<Dynamic -> Bool -> Int -> Int -> Int -> Bool> =
+		try neko.Lib.load("std","socket_set_keepalive",5) catch( e : Dynamic ) null;
 
 	// protocol
-	public var sock : sys.net.Socket;
+	public var sock : AbstractSocket;
 	public var data : String;
 	public var bytes : Int;
 	public var dataBytes : Int;
@@ -40,7 +42,6 @@ class Client {
 	public var params : List<{ k : String, v : String }>;
 	public var hostName : String;
 	public var httpMethod : String;
-	public var protocol : String;
 	public var headersSent : Bool;
 	public var outputHeaders : List<{ code : Code, str : String }>;
 	
@@ -60,6 +61,8 @@ class Client {
 	public function new(s,secure) {
 		sock = s;
 		this.secure = secure;
+		if( !secure && socket_set_keepalive != null )
+			socket_set_keepalive( untyped sock.__s, true, 60, 20, 3 );
 		dataBytes = 0;
 		headersSent = false;
 		headers = new List();
@@ -169,7 +172,6 @@ class Client {
 		case CParamValue: params.push({ k : key, v : data });
 		case CHostName: if( secure ) hostName = data;
 		case CHttpMethod: httpMethod = data;
-		case CProtocol: if( secure ) protocol = data;
 		case CExecute: execute = true; return true;
 		case CTestConnect: execute = false; return true;
 		case CHostResolve:
@@ -177,7 +179,6 @@ class Client {
 			ip = sock.peer().host.toString();
 			file = Tora.inst.resolveHost(hostName);
 			httpMethod = "TORA";
-			protocol = "TORA";
 			if( file == null ) {
 				sendMessage(CError,"Unknown host");
 				execute = false;

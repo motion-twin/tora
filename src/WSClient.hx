@@ -36,7 +36,6 @@ class WSClient extends Client {
 		buf = haxe.io.Bytes.alloc(initialBufferSize);
 		headersReceived = false;
 		httpMethod = "WEBSOCKET";
-		protocol = "WEBSOCKET";
 	}
 
 	override public function prepare() {
@@ -101,7 +100,7 @@ class WSClient extends Client {
 			if( p >= pos+len )
 				return 0;
 			p -= pos;
-			var s = buf.readString(pos,p);
+			var s = buf.getString(pos,p);
 			if( s.charCodeAt(s.length-1) == "\r".code )
 				s = s.substr(0,-1);
 			parseReq(s);
@@ -328,7 +327,7 @@ class WSClient extends Client {
 		}
 	}
 
-	// ne pas allouer de buffer
+	// TODO no buffer allocation
 	static function unmask( data : haxe.io.Bytes, mask : Int ){
 		var r = new haxe.io.BytesOutput();
 		var p = 0;

@@ -125,7 +125,6 @@ class ModuleContext {
 			}
 			curClass = null;
 		}
-		// TODO
 		try {
 			if( curClass != q.cl ) {
 				if( curModule == null )
@@ -365,11 +364,13 @@ class ModToraApi extends ModNekoApi {
 		client.writeLock.release();
 		q.lock.acquire();
 		q.clients.add({ c : client, h : h, cl : cl });
+		#if redis
 		if( q.redis != null && q.clients.length == 1 ){
 			q.redis.lock.acquire();
 			q.redis.addQueue( q );
 			q.redis.lock.release();
 		}
+		#end
 		q.lock.release();
 	}
 
