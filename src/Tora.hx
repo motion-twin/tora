@@ -73,7 +73,6 @@ class Tora {
 	var redirect : Dynamic;
 	var set_trusted : Dynamic;
 	var enable_jit : Bool -> Bool;
-	var socket_set_keepalive : Null<Dynamic -> Bool -> Int -> Int -> Int -> Bool>;
 	var running : Bool;
 	var jit : Bool;
 	var hosts : Map<String,String>;
@@ -108,7 +107,6 @@ class Tora {
 		redirect = neko.Lib.load("std","print_redirect",1);
 		set_trusted = neko.Lib.load("std","set_trusted",1);
 		enable_jit = neko.Lib.load("std","enable_jit",1);
-		socket_set_keepalive = try neko.Lib.load("std","socket_set_keepalive",5) catch( e : Dynamic ) null;
 		jit = (enable_jit(null) == true);
 		neko.vm.Thread.create(startup.bind(nthreads,clientQueue));
 		neko.vm.Thread.create(socketsLoop);
@@ -569,8 +567,6 @@ class Tora {
 		try {
 			while( running ) {
 				var sock = s.accept();
-				if( !secure && socket_set_keepalive != null )
-					socket_set_keepalive( untyped sock.__s, true, 60, 20, 3 );
 				switch( mode )
 				{
 					case TMDebug:	debugQueue.add(new Client(sock, true));
