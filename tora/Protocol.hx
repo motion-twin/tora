@@ -175,11 +175,15 @@ class Protocol {
 			var bl : Int = sock.bytesAvailable;
 			if( bl < dataLength )
 				return;
+			
 			var bytes = new flash.utils.ByteArray();
 			// ouch !! flash will read the whole data if 0 length !
 			if( dataLength > 0 )
 				sock.readBytes(bytes, 0, dataLength);
+			#if flash
 			var bytes = haxe.io.Bytes.ofData(bytes);
+			#end
+			
 			#elseif sys
 			var i = sock.input;
 			var code = i.readByte() - 1;
