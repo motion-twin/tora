@@ -64,7 +64,7 @@ class Protocol {
 			error("Not connected");
 			return;
 		}
-		var r = ~/^http:\/\/([^\/:]+)(:[0-9]+)?(.*)$/;
+		var r = ~/^https?:\/\/([^\/:]+)(:[0-9]+)?(.*)$/;
 		if( !r.match(url) )
 			throw "Invalid url "+url;
 		uri = r.matched(3);
