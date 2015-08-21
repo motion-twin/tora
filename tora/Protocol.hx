@@ -36,7 +36,7 @@ class Protocol {
 	public function new( url : String ) {
 		headers = new Array();
 		params = new Array();
-		var r = ~/^http:\/\/([^\/:]+)(:[0-9]+)?(.*)$/;
+		var r = ~/^https?:\/\/([^\/:]+)(:[0-9]+)?(.*)$/;
 		if( !r.match(url) )
 			throw "Invalid url "+url;
 		host = r.matched(1);
