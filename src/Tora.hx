@@ -75,7 +75,7 @@ class Tora {
 	var enable_jit : Bool -> Bool;
 	var running : Bool;
 	var jit : Bool;
-	var hosts : Map<String,String>;
+	var hosts : Map<String,{root: String, cert: Null<String>, key: Null<String>}>;
 	var ports : Array<Int>;
 	var tls : neko.vm.Tls<ThreadData>;
 	var delayQueue : List<Timer>;
@@ -551,6 +551,11 @@ class Tora {
 			#if hxssl
 			var ss = new neko.tls.Socket();
 			ss.useCertificate( tls.cert, tls.key );
+			for( k in hosts.keys() ){
+				var v = hosts.get(k);
+				if( v.cert!=null && v.key!=null )
+					ss.addSNICertificate( function(s) return s==k, v.cert, v.key );
+			}
 			s = ss;
 			#else
 			throw "Please compile with -lib hxssl to enable TLS support.";
@@ -873,7 +878,8 @@ class Tora {
 
 	function loadConfig( cfg : String ) {
 		var vhost = false;
-		var root = null, names = null;
+		var p = null;
+		var names = null;
 		// parse the apache configuration to extract virtual hosts
 		for( l in ~/[\r\n]+/g.split(cfg) ) {
 			l = StringTools.trim(l);
@@ -881,15 +887,15 @@ class Tora {
 			if( !vhost ) {
 				if( StringTools.startsWith(lto,"<virtualhost") ) {
 					vhost = true;
-					root = null;
+					p = {root: null, cert: null, key: null};
 					names = new Array();
 				}
 			} else if( lto == "</virtualhost>" ) {
 				vhost = false;
-				if( root != null )
+				if( p != null && p.root != null )
 					for( n in names )
 						if( !hosts.exists(n) )
-							hosts.set(n,root);
+							hosts.set(n,p);
 			} else {
 				var cmd = ~/[ \t]+/g.split(l);
 				switch( cmd.shift().toLowerCase() ) {
@@ -899,15 +905,17 @@ class Tora {
 					path = path.split("\"").join("").split("\\").join("/");
 					if( path.length > 0 && path.charAt(path.length-1) != "/" )
 						path += "/";
-					root = path+"index.n";
+					p.root = path+"index.n";
 				case "servername", "serveralias": names = names.concat(cmd);
+				case "sslcertificatefile": p.cert = cmd.join(" ");
+				case "sslcertificatekeyfile": p.key = cmd.join(" ");
 				}
 			}
 		}
 	}
 
 	public function resolveHost( name : String ) {
-		return hosts.get(name);
+		return hosts.get(name).root;
 	}
 
 	public function handleRequest( c : Client ) {
@@ -969,7 +977,9 @@ class Tora {
 				if( hp.length != 2 ) throw "Unsafe format should be host:port";
 				var port = Std.parseInt(hp[1]);
 				inst.ports.push(port);
-				unsafe.add( { host : hp[0], port : port, tls: {key: value(), cert: value()} } );
+				var cert = value();
+				var key = value();
+				unsafe.add( { host : hp[0], port : port, tls: {cert: cert, key: key} } );
 
 			case "-websocket":
 				var hp = value().split(":");
@@ -983,7 +993,9 @@ class Tora {
 				if( hp.length != 2 ) throw "WebSocket format should be host:port";
 				var port = Std.parseInt(hp[1]);
 				inst.ports.push(port);
-				websocket.add({ host : hp[0], port : port, tls: {key: value(), cert: value()} });
+				var cert = value();
+				var key = value();
+				websocket.add({ host : hp[0], port : port, tls: {cert: cert, key: key} });
 			
 			case "-debugPort":
 				debugPort = Std.parseInt(value());
