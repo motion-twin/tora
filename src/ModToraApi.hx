@@ -458,15 +458,15 @@ class ModToraApi extends ModNekoApi {
 		queue_check(q);
 		q.lock.release();
 	
-		if( client.writeLock == null )
-			client.writeLock = new neko.vm.Mutex();
-		client.writeLock.acquire();
-		client.queues.remove(q);
-		client.writeLock.release();
-		
-		if( client.queues.length == 0 ) {
-			client.needClose = true;
-			Tora.inst.close(client, true);
+		if( client.writeLock != null ){
+			client.writeLock.acquire();
+			client.queues.remove(q);
+			client.writeLock.release();
+			
+			if( client.queues.length == 0 ) {
+				client.needClose = true;
+				Tora.inst.close(client, true);
+			}
 		}
 	}
 
