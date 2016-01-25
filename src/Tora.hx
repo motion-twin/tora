@@ -545,7 +545,7 @@ class Tora {
 		}
 	}
 
-	function run( host : String, port : Int, mode : ToraMode, tls: Null<{key: String, cert: String}> ) {
+	function run( host : String, port : Int, mode : ToraMode, tls: Null<{key: String, cert: String, cipherList: Null<String>}> ) {
 		var s : AbstractSocket;
 		if( tls != null ){
 			#if hxssl
@@ -769,7 +769,7 @@ class Tora {
 			Sys.print("<th>Redis</th>");
 			#end
 			Sys.print("</tr>");
-			
+
 			ModToraApi.queues_lock.acquire();
 			var ql = Lambda.list(ModToraApi.queues);
 			ModToraApi.queues_lock.release();
@@ -793,7 +793,7 @@ class Tora {
 			ModToraApi.queues_lock.release();
 
 			var kc = new Map<Client,Client>();
-			
+
 			for( q in ql ){
 				q.lock.acquire();
 				var cl = Lambda.list(q.clients);
@@ -804,7 +804,7 @@ class Tora {
 					if( kc.exists(c) )
 						continue;
 					kc.set(c,c);
-					
+
 					var ua = null;
 					try {
 						for( h in c.headers ){
@@ -1005,15 +1005,16 @@ class Tora {
 
 			case "-debugPort":
 				debugPort = Std.parseInt(value());
-			
+
 			case "-fcgi":
 				fcgiMode = true;
-			
+
 			default:
 				throw "Unknown argument "+kind;
 			}
 		}
 		inst.init(nthreads);
+
 		if( debugPort != null ) {
 			log("Opening debug port on " + host + ":" + debugPort);
 			inst.debugQueue = new neko.vm.Deque();
@@ -1033,12 +1034,12 @@ class Tora {
 			neko.vm.Thread.create(inst.run.bind(u.host,u.port, TMWebSocket, u.tls));
 		}
 		log("Starting Tora server on " + host + ":" + port + " with " + nthreads + " threads");
-		
+
 		if ( fcgiMode )
 			inst.run(host, port, TMFastCGI, null);
 		else
 			inst.run(host, port, TMRegular, null);
-		
+
 		inst.stop();
 	}
 
