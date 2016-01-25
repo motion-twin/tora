@@ -551,6 +551,8 @@ class Tora {
 			#if hxssl
 			var ss = new neko.tls.Socket();
 			ss.useCertificate( tls.cert, tls.key );
+			if( tls.cipherList != null )
+				ss.setCipherList( tls.cipherList );
 			for( k in hosts.keys() ){
 				var v = hosts.get(k);
 				if( v.cert!=null && v.key!=null )
@@ -950,6 +952,7 @@ class Tora {
 		var i = 0;
 		var debugPort = null;
 		var fcgiMode = false;
+		var tlsCipherList = null;
 		// skip first argument for haxelib "run"
 		if( args[0] != null && StringTools.endsWith(args[0],"/") )
 			i++;
@@ -979,7 +982,7 @@ class Tora {
 				inst.ports.push(port);
 				var cert = value();
 				var key = value();
-				unsafe.add( { host : hp[0], port : port, tls: {cert: cert, key: key} } );
+				unsafe.add( { host : hp[0], port : port, tls: {cert: cert, key: key, cipherList: null} } );
 
 			case "-websocket":
 				var hp = value().split(":");
@@ -995,8 +998,11 @@ class Tora {
 				inst.ports.push(port);
 				var cert = value();
 				var key = value();
-				websocket.add({ host : hp[0], port : port, tls: {cert: cert, key: key} });
-			
+				websocket.add({ host : hp[0], port : port, tls: {cert: cert, key: key, cipherList: null} });
+
+			case "-tlsCipherList":
+				tlsCipherList = value();
+
 			case "-debugPort":
 				debugPort = Std.parseInt(value());
 			
@@ -1016,10 +1022,14 @@ class Tora {
 		}
 		for( u in unsafe ) {
 			log("Opening unsafe port on "+u.host+":"+u.port);
+			if( u.tls != null && tlsCipherList != null && u.tls.cipherList == null )
+				u.tls.cipherList = tlsCipherList;
 			neko.vm.Thread.create(inst.run.bind(u.host, u.port, TMUnsafe, u.tls));
 		}
 		for( u in websocket ) {
 			log("Opening websocket port on "+u.host+":"+u.port);
+			if( u.tls != null && tlsCipherList != null && u.tls.cipherList == null )
+				u.tls.cipherList = tlsCipherList;
 			neko.vm.Thread.create(inst.run.bind(u.host,u.port, TMWebSocket, u.tls));
 		}
 		log("Starting Tora server on " + host + ":" + port + " with " + nthreads + " threads");
