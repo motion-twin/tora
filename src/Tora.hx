@@ -550,9 +550,10 @@ class Tora {
 		if( tls != null ){
 			#if hxssl
 			var ss = new neko.tls.Socket();
+			ss.validateCert = false;
 			ss.useCertificate( tls.cert, tls.key );
 			if( tls.cipherList != null )
-				ss.setCipherList( tls.cipherList );
+				ss.setCipherList( tls.cipherList, true );
 			for( k in hosts.keys() ){
 				var v = hosts.get(k);
 				if( v.cert!=null && v.key!=null )
