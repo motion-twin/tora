@@ -241,22 +241,20 @@ class WSClient extends Client {
 		if( rcode != null ){
 			heads.add("HTTP/1.1 "+rcode+" Access denied");
 			heads.add("Connection: close");
-			sendHeads( heads );
-			return;
+		}else{
+			heads.add("HTTP/1.1 101 Switching Protocols");
+			heads.add("Upgrade: websocket");
+			heads.add("Connection: Upgrade");
+			var key = getHeader("Sec-WebSocket-Key");
+			if( key == null )
+				throw "Missing Sec-WebSocket-Key header";
+
+			var accept = haxe.crypto.Sha1.encode(key+GUID);
+			accept = haxe.crypto.BaseCode.decode(accept,"0123456789abcdef");
+			accept = haxe.crypto.BaseCode.encode(accept,"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/");
+
+			heads.add("Sec-WebSocket-Accept: "+accept+"=");
 		}
-
-		heads.add("HTTP/1.1 101 Switching Protocols");
-		heads.add("Upgrade: websocket");
-		heads.add("Connection: Upgrade");
-		var key = getHeader("Sec-WebSocket-Key");
-		if( key == null )
-			throw "Missing Sec-WebSocket-Key header";
-
-		var accept = haxe.crypto.Sha1.encode(key+GUID);
-		accept = haxe.crypto.BaseCode.decode(accept,"0123456789abcdef");
-		accept = haxe.crypto.BaseCode.encode(accept,"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/");
-
-		heads.add("Sec-WebSocket-Accept: "+accept+"=");
 
 		var k = null;
 		for( h in outputHeaders ){
