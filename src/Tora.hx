@@ -569,12 +569,23 @@ class Tora {
 		try {
 			s.bind(new sys.net.Host(host),port);
 		} catch( e : Dynamic ) {
-			throw "Failed to bind socket : invalid host or port is busy";
+			throw "Failed to bind socket : invalid host or port is busy ("+e+")";
 		}
 		s.listen(100);
 		try {
 			while( running ) {
-				var sock = s.accept();
+				var sock = null;
+				try{
+					sock = s.accept();
+				}catch( e : Dynamic ){
+					// Ignore accept() errors when using tls (tls negociation errors)
+					if( tls != null ){
+						log("accept() failure: "+e);
+						continue;
+					}else{
+						neko.Lib.rethrow(e);
+					}
+				}
 				switch( mode )
 				{
 					case TMDebug:	debugQueue.add(new Client(sock, true));
@@ -585,7 +596,7 @@ class Tora {
 				}
 			}
 		} catch( e : Dynamic ) {
-			log("accept() failure : maybe too much FD opened ?");
+			log("accept() failure : maybe too much FD opened ? ("+e+")");
 		}
 		// close our waiting socket
 		s.close();
