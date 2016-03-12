@@ -21,11 +21,10 @@ import ModToraApi.Share;
 class Client {
 
 	static var CODES = Type.getEnumConstructs(Code);
-	static var socket_set_keepalive : Null<Dynamic -> Bool -> Int -> Int -> Int -> Bool> =
-		try neko.Lib.load("std","socket_set_keepalive",5) catch( e : Dynamic ) null;
+	static var socket_set_keepalive : Null<Dynamic->Bool->Int->Int->Void> = neko.Lib.loadLazy("std","socket_set_keepalive",4);
 
 	// protocol
-	public var sock : AbstractSocket;
+	public var sock : sys.net.ISocket;
 	public var data : String;
 	public var bytes : Int;
 	public var dataBytes : Int;
@@ -62,7 +61,7 @@ class Client {
 		sock = s;
 		this.secure = secure;
 		if( !secure && socket_set_keepalive != null )
-			socket_set_keepalive( untyped sock.__s, true, 60, 20, 3 );
+			socket_set_keepalive( untyped sock.__s, true, 60, 20 );
 		dataBytes = 0;
 		headersSent = false;
 		headers = new List();

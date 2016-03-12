@@ -16,6 +16,8 @@
 /* ************************************************************************ */
 import tora.Code;
 import tora.Infos;
+import sys.ssl.Key;
+import sys.ssl.Certificate;
 
 typedef ThreadData = {
 	var id : Int;
@@ -75,7 +77,7 @@ class Tora {
 	var enable_jit : Bool -> Bool;
 	var running : Bool;
 	var jit : Bool;
-	var hosts : Map<String,{root: String, cert: Null<String>, key: Null<String>}>;
+	var hosts : Map<String,{root: String, cert: Null<Certificate>, key: Null<Key>}>;
 	var ports : Array<Int>;
 	var tls : neko.vm.Tls<ThreadData>;
 	var delayQueue : List<Timer>;
@@ -545,26 +547,18 @@ class Tora {
 		}
 	}
 
-	function run( host : String, port : Int, mode : ToraMode, tls: Null<{key: String, cert: String, cipherList: Null<String>, dhFile: Null<String>}> ) {
-		var s : AbstractSocket;
+	function run( host : String, port : Int, mode : ToraMode, tls: Null<{key: Key, cert: Certificate}> ) {
+		var s : sys.net.ISocket;
 		if( tls != null ){
-			#if hxssl
-			var ss = new neko.tls.Socket();
-			ss.validateCert = false;
-			ss.useCertificate( tls.cert, tls.key );
-			if( tls.cipherList != null )
-				ss.setCipherList( tls.cipherList, true );
-			if( tls.dhFile != null )
-				ss.setDHFile( tls.dhFile );
+			var ss = new sys.ssl.Socket();
+			ss.verifyCert = false;
+			ss.setCertificate( tls.cert, tls.key );
 			for( k in hosts.keys() ){
 				var v = hosts.get(k);
 				if( v.cert!=null && v.key!=null )
 					ss.addSNICertificate( function(s) return s==k, v.cert, v.key );
 			}
 			s = ss;
-			#else
-			throw "Please compile with -lib hxssl to enable TLS support.";
-			#end
 		}else{
 			s = new sys.net.Socket();
 		}
@@ -923,8 +917,8 @@ class Tora {
 						path += "/";
 					p.root = path+"index.n";
 				case "servername", "serveralias": names = names.concat(cmd);
-				case "sslcertificatefile": p.cert = cmd.join(" ");
-				case "sslcertificatekeyfile": p.key = cmd.join(" ");
+				case "sslcertificatefile": p.cert = Certificate.loadFile(cmd.join(" "));
+				case "sslcertificatekeyfile": p.key = Key.loadFile(cmd.join(" "));
 				}
 			}
 		}
@@ -966,8 +960,6 @@ class Tora {
 		var i = 0;
 		var debugPort = null;
 		var fcgiMode = false;
-		var tlsCipherList = null;
-		var tlsDHFile = null;
 		// skip first argument for haxelib "run"
 		if( args[0] != null && StringTools.endsWith(args[0],"/") )
 			i++;
@@ -995,9 +987,9 @@ class Tora {
 				if( hp.length != 2 ) throw "Unsafe format should be host:port";
 				var port = Std.parseInt(hp[1]);
 				inst.ports.push(port);
-				var cert = value();
-				var key = value();
-				unsafe.add( { host : hp[0], port : port, tls: {cert: cert, key: key, cipherList: null, dhFile: null} } );
+				var cert = Certificate.loadFile(value());
+				var key = Key.loadFile(value());
+				unsafe.add( { host : hp[0], port : port, tls: {cert: cert, key: key} } );
 
 			case "-websocket":
 				var hp = value().split(":");
@@ -1011,15 +1003,9 @@ class Tora {
 				if( hp.length != 2 ) throw "WebSocket format should be host:port";
 				var port = Std.parseInt(hp[1]);
 				inst.ports.push(port);
-				var cert = value();
-				var key = value();
-				websocket.add({ host : hp[0], port : port, tls: {cert: cert, key: key, cipherList: null, dhFile: null} });
-
-			case "-tlsCipherList":
-				tlsCipherList = value();
-
-			case "-tlsDHFile":
-				tlsDHFile = value();
+				var cert = Certificate.loadFile(value());
+				var key = Key.loadFile(value());
+				websocket.add({ host : hp[0], port : port, tls: {cert: cert, key: key} });
 
 			case "-debugPort":
 				debugPort = Std.parseInt(value());
@@ -1041,18 +1027,10 @@ class Tora {
 		}
 		for( u in unsafe ) {
 			log("Opening unsafe port on "+u.host+":"+u.port);
-			if( u.tls != null && tlsCipherList != null && u.tls.cipherList == null )
-				u.tls.cipherList = tlsCipherList;
-			if( u.tls != null && tlsDHFile != null && u.tls.dhFile == null )
-				u.tls.dhFile = tlsDHFile;
 			neko.vm.Thread.create(inst.run.bind(u.host, u.port, TMUnsafe, u.tls));
 		}
 		for( u in websocket ) {
 			log("Opening websocket port on "+u.host+":"+u.port);
-			if( u.tls != null && tlsCipherList != null && u.tls.cipherList == null )
-				u.tls.cipherList = tlsCipherList;
-			if( u.tls != null && tlsDHFile != null && u.tls.dhFile == null )
-				u.tls.dhFile = tlsDHFile;
 			neko.vm.Thread.create(inst.run.bind(u.host,u.port, TMWebSocket, u.tls));
 		}
 		log("Starting Tora server on " + host + ":" + port + " with " + nthreads + " threads");

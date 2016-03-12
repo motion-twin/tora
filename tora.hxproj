@@ -21,6 +21,7 @@
   <build>
     <option directives="" />
     <option flashStrict="False" />
+    <option noInlineOnDebug="False" />
     <option mainClass="Tora" />
     <option enabledebug="False" />
     <option additional="--next&#xA;-cp src&#xA;-neko tora_admin.n&#xA;-main Admin" />
@@ -44,6 +45,7 @@
     <hidden path="tora_admin.n" />
     <hidden path="tora.n" />
     <hidden path="haxelib.json" />
+    <hidden path="obj" />
   </hiddenPaths>
   <!-- Executed before build -->
   <preBuildCommand />
