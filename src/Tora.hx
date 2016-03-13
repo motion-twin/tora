@@ -105,6 +105,7 @@ class Tora {
 	}
 
 	function init( nthreads : Int ) {
+		sys.ssl.Socket.DEFAULT_CA = sys.ssl.Certificate.loadDefaults();
 		Sys.putEnv("MOD_NEKO","1");
 		redirect = neko.Lib.load("std","print_redirect",1);
 		set_trusted = neko.Lib.load("std","set_trusted",1);
@@ -312,6 +313,7 @@ class Tora {
 		var me = this;
 		var mod_neko = neko.NativeString.ofString("mod_neko@");
 		var mem_size = "std@mem_size";
+		var ssl_load_defaults = neko.NativeString.ofString("ssl@cert_load_defaults");
 		var self : neko.vm.Loader = null;
 		var first_module = true;
 		var loadPrim = function(prim:String,nargs:Int) {
@@ -320,6 +322,10 @@ class Tora {
 				if( p == null || untyped __dollar__nargs(p) != nargs )
 					throw "Primitive not found "+prim+" "+nargs;
 				return untyped __dollar__varargs( function(args) return __dollar__call(p,api,args) );
+			}else if ( untyped __dollar__sfind(prim.__s, 0, ssl_load_defaults) == 0 ) {
+				return untyped __dollar__varargs( function(args) {
+					return sys.ssl.Socket.DEFAULT_CA == null ? null : @:privateAccess sys.ssl.Socket.DEFAULT_CA.__x;
+				});
 			}
 			if( prim == mem_size )
 				return function(_) return 0;
