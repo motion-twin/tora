@@ -25,6 +25,7 @@ class Client {
 
 	// protocol
 	public var sock : sys.net.ISocket;
+	public var needHandshake : Bool;
 	public var data : String;
 	public var bytes : Int;
 	public var dataBytes : Int;
@@ -57,8 +58,9 @@ class Client {
 
 	var key : String;
 
-	public function new(s,secure) {
+	public function new(s,secure,ssl) {
 		sock = s;
+		needHandshake = ssl;
 		this.secure = secure;
 		if( !secure && socket_set_keepalive != null )
 			socket_set_keepalive( untyped sock.__s, true, 60, 20 );
@@ -153,6 +155,13 @@ class Client {
 			o.writeByte( Type.enumIndex(code) + 1 );
 			o.writeUInt24( len );
 			o.writeFullBytes( neko.Lib.bytesReference(msg), pos, len );
+		}
+	}
+	
+	public function handshake() {
+		if( needHandshake ){
+			(cast sock:sys.ssl.Socket).handshake();
+			needHandshake = false;
 		}
 	}
 

@@ -28,8 +28,8 @@ class WSClient extends Client {
 
 	var headersReceived : Bool;
 
-	public function new(s,secure){
-		super(s,secure);
+	public function new(s,secure,ssl){
+		super(s,secure,ssl);
 		initialBufferSize = (1 << 10);
 		maxBufferSize = (1 << 16);
 		bufpos = 0;

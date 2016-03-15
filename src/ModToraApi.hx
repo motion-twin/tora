@@ -37,7 +37,7 @@ class NullClient extends Client {
 	public var outBuf : StringBuf;
 	
 	public function new( file : String, host : String, uri : String ) {
-		super(cast { setTimeout : function(_) {}, setFastSend : function(_) {}, close : function() {} },true);
+		super(cast { setTimeout : function(_) {}, setFastSend : function(_) {}, close : function() {} },true,false);
 		this.file = file;
 		this.hostName = host;
 		this.uri = uri;

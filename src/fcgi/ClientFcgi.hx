@@ -41,9 +41,9 @@ class ClientFcgi extends Client
 	var multiparts : List<{name : String, file : String, data : String}>;
 	var fileMessages : List<{ code : Code, str : String }>;
 	
-	public function new(s,secure)
+	public function new(s,secure,ssl)
 	{
-		super(s, secure);
+		super(s, secure, ssl);
 		
 		requestId = null;
 		role = null;

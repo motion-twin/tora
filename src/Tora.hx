@@ -459,6 +459,7 @@ class Tora {
 			// retrieve request
 			try {
 				client.sock.setTimeout(3);
+				client.handshake();
 				while( !client.processMessage() ) {
 				}
 				if( client.execute && client.file == null )
@@ -576,25 +577,14 @@ class Tora {
 		s.listen(100);
 		try {
 			while( running ) {
-				var sock = null;
-				try{
-					sock = s.accept();
-				}catch( e : Dynamic ){
-					// Ignore accept() errors when using tls (tls negociation errors)
-					if( tls != null ){
-						log("accept() failure: "+e);
-						continue;
-					}else{
-						neko.Lib.rethrow(e);
-					}
-				}
+				var sock = s.accept();
 				switch( mode )
 				{
-					case TMDebug:	debugQueue.add(new Client(sock, true));
-					case TMUnsafe:	handleRequest(new Client(sock, false));
-					case TMRegular:	handleRequest(new Client(sock, true));
-					case TMFastCGI: handleRequest(new fcgi.ClientFcgi(sock, true));
-					case TMWebSocket: handleRequest(new WSClient(sock, false));
+					case TMDebug:	debugQueue.add(new Client(sock, true, tls!=null));
+					case TMUnsafe:	handleRequest(new Client(sock, false, tls!=null));
+					case TMRegular:	handleRequest(new Client(sock, true, tls!=null));
+					case TMFastCGI: handleRequest(new fcgi.ClientFcgi(sock, true, tls!=null));
+					case TMWebSocket: handleRequest(new WSClient(sock, false, tls!=null));
 				}
 			}
 		} catch( e : Dynamic ) {
