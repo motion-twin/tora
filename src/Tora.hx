@@ -555,7 +555,7 @@ class Tora {
 	}
 
 	function run( host : String, port : Int, mode : ToraMode, tls: Null<{key: Key, cert: Certificate}> ) {
-		var s : sys.net.ISocket;
+		var s : sys.net.Socket;
 		if( tls != null ){
 			var ss = new sys.ssl.Socket();
 			ss.verifyCert = false;

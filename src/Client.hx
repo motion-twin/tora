@@ -24,7 +24,7 @@ class Client {
 	static var socket_set_keepalive : Null<Dynamic->Bool->Int->Int->Void> = neko.Lib.loadLazy("std","socket_set_keepalive",4);
 
 	// protocol
-	public var sock : sys.net.ISocket;
+	public var sock : sys.net.Socket;
 	public var needHandshake : Bool;
 	public var data : String;
 	public var bytes : Int;
