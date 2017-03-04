@@ -71,6 +71,7 @@ class WSClient extends Client {
 			available = newsize - bufpos;
 		}
 
+		sock.setTimeout( 1 );
 		var bytes = sock.input.readBytes(buf,bufpos,available);
 		var pos = 0;
 		var len = bufpos + bytes;
